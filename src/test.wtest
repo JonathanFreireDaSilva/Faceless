@@ -1,0 +1,204 @@
+import RedSocial.*
+import Publicacion.*
+import Foto.*
+import Usuarios.*
+import Video.*
+import Texto.*
+ 
+
+
+describe "test" {
+
+	const faceless = new RedSocial()
+	
+	
+	//USUARIOS
+	
+	const pedro = new Usuario()
+	const juan = new Usuario()
+	const mariela = new Usuario()
+	const sofia = new Usuario()
+	
+	
+	const publico = new Publico() 
+	 
+	const listaNegra = new ListaNegra()
+	const listaBlanca = new ListaBlanca()
+	
+	
+	//PUBLICACIONES
+	
+	const foto1 = new Foto()
+	const foto2 = new Foto()
+	
+	// CALIDAD DE VIDEO
+	const hd = new Hd()
+	const normal = new Normal()
+	
+	const video1 = new Video()
+	const video2 = new Video()
+	
+	
+ 
+    
+	fixture {
+		
+	    faceless.agregarUsuario(pedro)
+	    faceless.agregarUsuario(juan)		
+	    faceless.agregarUsuario(mariela)	
+	    faceless.agregarUsuario(sofia)	
+ 
+	}
+ 
+
+test "1 saber cuanto espacio ocupa en total las publicaciones de un usuario" {
+		foto1.alto(10)
+		foto1.ancho(19)
+		foto2.ancho(10)
+		foto2.alto(19)
+		
+		pedro.publicar(foto1)
+		pedro.publicar(foto2)
+		
+		assert.equals(266,faceless.totalPesoDePublicacionesDe(pedro))
+		
+		
+		video1.segundosDeVideo(10)
+	    video1.calidad(hd)
+		video2.segundosDeVideo(10)
+		video2.calidad(normal)
+		
+		juan.publicar(video1)
+		juan.publicar(video2)
+		
+		assert.equals(40,faceless.totalPesoDePublicacionesDe(juan))
+	}
+	
+	test "2 darle me gusta a una publicación, cuántos megusta"{
+		juan.darMegusta(foto1)
+		sofia.darMegusta(foto1)
+		mariela.darMegusta(foto1)
+		
+		
+		
+		pedro.darMegusta(video2)
+		sofia.darMegusta(video2)
+		mariela.darMegusta(video1)
+		
+		
+		assert.equals(3,faceless.cantidadDeMegustaDe(foto1))
+		assert.equals(1,faceless.cantidadDeMegustaDe(video1))
+		assert.equals(2,faceless.cantidadDeMegustaDe(video2))
+	}
+	
+	test "3 Saber si un usuario es más amistoso que otro"{
+		
+		pedro.agregarAmigo(juan)
+		pedro.agregarAmigo(mariela)
+		pedro.agregarAmigo(sofia)
+		
+		juan.agregarAmigo(mariela)
+		juan.agregarAmigo(sofia)
+		
+		assert.that(faceless.masAmistoso(pedro,juan))
+		
+	}
+
+
+    test "4 Saber si un usuario puede ver una publicacion (porque tiene permisos)." {
+		pedro.agregarAmigo(juan)
+		pedro.agregarAmigo(mariela)
+		pedro.agregarAmigo(sofia)
+		
+		pedro.agregarListaBlanca(mariela)
+		pedro.agregarListaBlanca(juan)
+		
+		
+		pedro.publicar(foto1)
+		pedro.asignarPermiso(foto1,listaBlanca)
+     	pedro.publicar(foto2)
+		pedro.asignarPermiso(foto2,publico)
+		
+		
+		assert.that(!faceless.puedeVerUsuarioPublicacion(sofia,foto1))
+		assert.that(faceless.puedeVerUsuarioPublicacion(sofia,foto2))
+		
+		assert.that(faceless.puedeVerUsuarioPublicacion(juan,foto1))
+		assert.that(faceless.puedeVerUsuarioPublicacion(mariela,foto1))
+		
+		assert.that(faceless.puedeVerUsuarioPublicacion(juan,foto2))
+		assert.that(faceless.puedeVerUsuarioPublicacion(mariela,foto2))
+		
+		juan.agregarAmigo(mariela)
+		juan.agregarAmigo(sofia)
+		
+		juan.agregarListaNegra(sofia)
+		
+		
+		juan.publicar(video1)
+		juan.asignarPermiso(video1,listaNegra)
+		
+		juan.publicar(video2)
+		juan.asignarPermiso(video2,listaBlanca)
+		
+		assert.that(!faceless.puedeVerUsuarioPublicacion(sofia,video1))
+		assert.that(!faceless.puedeVerUsuarioPublicacion(sofia,video2))
+		
+		assert.that(faceless.puedeVerUsuarioPublicacion(mariela,video1))
+		assert.that(!faceless.puedeVerUsuarioPublicacion(mariela,video2))
+		}
+		
+		test "5  Determinar el conjunto de amigos que pueden ver todas sus publicaciones " {
+		
+		pedro.agregarAmigo(juan)
+		pedro.agregarAmigo(mariela)
+		pedro.agregarAmigo(sofia)
+	 
+		
+		assert.equals(#{juan,mariela,sofia},faceless.merjoresAmigos(pedro))
+		
+	}
+	
+	test "6 el amigo que tiene mas me gusta entre todas sus publicaciones."{
+		
+		sofia.agregarAmigo(pedro)
+		sofia.agregarAmigo(juan)
+		
+		pedro.publicar(foto1)
+		
+		juan.darMegusta(foto1)
+		sofia.darMegusta(foto1)
+		
+		juan.publicar(foto2)
+		
+        sofia.darMegusta(foto2)
+ 
+		
+	 	assert.equals(pedro,faceless.amigoMasPopularDe(sofia))
+		
+	}
+	
+	test"7  Saber si un usuario stalkea a otro"{
+		
+		    pedro.publicar(foto1)
+		    pedro.publicar(foto2)
+		    pedro.publicar(video1)
+		    
+	
+			
+			juan.darMegusta(foto1)
+			juan.darMegusta(foto2)
+			juan.darMegusta(video1)
+			
+		
+			
+			assert.equals(3,pedro.totalPublicaciones())
+			assert.that(foto1.recibioMegustaDe(juan))
+			assert.that(foto2.recibioMegustaDe(juan))
+			assert.that(video1.recibioMegustaDe(juan))
+			assert.equals(3,juan.totalDeLikeDados(pedro))
+			assert.that(faceless.stalkea(juan,pedro))
+	}
+	
+}
+
